@@ -8,8 +8,8 @@ Gem::Specification.new do |gem|
   gem.version       = Bitswitch::VERSION
   gem.authors       = ["Kelly Becker"]
   gem.email         = ["kellylsbkr@gmail.com"]
-  gem.description   = "Bitswitch is a gem designed to make storing multiple true false values easier"
-  gem.summary       = "Soon..."
+  gem.description   = "Have you ever wanted to store multiple true/false values in your database, but annoyed with how many fields your tables have, then BitSwitcher is good for you. By assigning a bit for each true/false you can store all your fields in one integer."
+  gem.summary       = "Bitswitch lets you store multiple true/false values in an integer using boolean math."
   gem.homepage      = "http://kellybecker.me"
 
   gem.files         = `git ls-files`.split($/)
