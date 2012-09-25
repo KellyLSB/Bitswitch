@@ -15,7 +15,7 @@ Usage could be for security, or settings, or more.
 
 ## Todo
 
-* Add support for labeling bits
+* Think about new stuff to add in.
 
 ## Copyright
 
