@@ -68,6 +68,9 @@ class BitSwitch
 
 		# Set a whole new label hash
 		@labels = hash
+
+		# Return self
+		return self
 	end
 	
 	# Convert to integer
