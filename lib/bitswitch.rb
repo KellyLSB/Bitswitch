@@ -64,7 +64,10 @@ class BitSwitch
 	def labels(hash = {}, reset = false)
 
 		# If reset is false then merge the labels
-		return @labels.merge(hash) unless reset
+		unless reset
+			@labels.merge!(hash)
+			return self
+		end
 
 		# Set a whole new label hash
 		@labels = hash
