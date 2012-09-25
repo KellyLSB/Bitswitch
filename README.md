@@ -3,7 +3,12 @@
 Bit switch is a simple bitswitch class which allows you to switch on differnt values for different bits.
 Usage could be for security, or settings, or more.
 
-## Contributing to bitswitch
+## Documentation for BitSwitch
+
+Documentation for BitSwitch is available on the wiki.
+https://github.com/KellyLSB/Bitswitch/wiki/How-to-use
+
+## Contributing to BitSwitch
  
 * Check out the latest master to make sure the feature hasn't been implemented or the bug hasn't been fixed yet.
 * Check out the issue tracker to make sure someone already hasn't requested it and/or contributed it.
