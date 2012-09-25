@@ -61,7 +61,7 @@ class BitSwitch
 		@val = n
 	end
 
-	def labels=(hash = {}, reset = false)
+	def labels(hash = {}, reset = false)
 
 		# If reset is false then merge the labels
 		return @labels.merge(hash) unless reset
@@ -95,7 +95,7 @@ class BitSwitch
 end
 
 class Fixnum
-	def to_switch
-		BitSwitch.new(self)
+	def to_switch(labels = {})
+		BitSwitch.new(self, labels)
 	end
 end
