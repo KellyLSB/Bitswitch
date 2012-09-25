@@ -16,8 +16,6 @@ Usage could be for security, or settings, or more.
 ## Todo
 
 * Add support for labeling bits
-* Add extension to Fixnum to convert into bit
-* Allow converting to a fixnum
 
 ## Copyright
 

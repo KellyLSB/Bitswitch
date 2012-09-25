@@ -1,6 +1,6 @@
 class BitSwitch
-	def initialize
-		@val = 0
+	def initialize(n = 0)
+		@val = n
 	end
 
 	def []=(bit, val)
@@ -12,5 +12,20 @@ class BitSwitch
 	
 	def [](bit)
 		(2 ** bit) & @val > 0
+	end
+	
+	def set=(n)
+		return false unless n.is_a?(Fixnum)
+		@val = n
+	end
+	
+	def to_i
+		@val
+	end
+end
+
+class Fixnum
+	def to_switch
+		BitSwitch.new(self)
 	end
 end
