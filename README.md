@@ -1,11 +1,16 @@
 # BitSwitch
 
-Bit switch is a simple bitswitch class which allows you to switch on differnt values for different bits.
-Usage could be for security, or settings, or more.
+BitSwitch is a class which allows you to store boolean values on different bits in an integer. Think of a really long row of lightswitches. I'll help you out a bit.
+
+![Bit Switch](http://upload.wikimedia.org/wikipedia/commons/0/0d/DIP_switch_01_Pengo.jpg "Bit Switch")
+
+But the general idea in programming is instead of saving multiple boolean values in your database, you can rather store everything in a single integer. Usage could be for security, various settings, etc...
 
 ## Installing BitSwitch
 
-You can install BitSwitch with gem. `gem install bitswitch`
+You can install BitSwitch with [RubyGems](https://rubygems.org/gems/bitswitch).
+
+`gem install bitswitch` or `gem 'bitswitch'`
 
 ## Documentation for BitSwitch
 
