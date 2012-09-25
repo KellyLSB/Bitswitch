@@ -3,6 +3,10 @@
 Bit switch is a simple bitswitch class which allows you to switch on differnt values for different bits.
 Usage could be for security, or settings, or more.
 
+## Installing BitSwitch
+
+You can install BitSwitch with gem. `gem install bitswitch`
+
 ## Documentation for BitSwitch
 
 Documentation for BitSwitch is available on the wiki.
