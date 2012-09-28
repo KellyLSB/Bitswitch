@@ -31,6 +31,10 @@ https://github.com/KellyLSB/Bitswitch/wiki/How-to-use
 
 * Think about new stuff to add in.
 
+## Other Languages
+
+BitSwitch is also available in [PHP](http://github.com/KellyLSB/Bitswitch-PHP)
+
 ## Copyright
 
 Copyright (c) 2012 Kelly Becker. See LICENSE.txt for
