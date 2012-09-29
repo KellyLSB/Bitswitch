@@ -33,7 +33,7 @@ https://github.com/KellyLSB/Bitswitch/wiki/How-to-use
 
 ## Other Languages
 
-BitSwitch is also available in [PHP](http://github.com/KellyLSB/Bitswitch-PHP)
+BitSwitch is also available in Ruby, [PHP](http://github.com/KellyLSB/Bitswitch-PHP)
 
 ## Copyright
 
