@@ -139,6 +139,9 @@ if defined? ActiveRecord::Base
 				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, column.to_sym) do |*args|
 					val = read_attribute(column)
 
+					# If nil make 0
+					val = 0 if val.nil?
+
 					# Make sure the value is an integer
 					raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
 
@@ -155,6 +158,9 @@ if defined? ActiveRecord::Base
 				columne = column.to_s + '='
 				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, columne.to_sym) do |input|
 					val = read_attribute(column)
+
+					# If nil make 0
+					val = 0 if val.nil?
 
 					# Make sure the value is an integer
 					raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
