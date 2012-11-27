@@ -179,14 +179,33 @@ if defined? ActiveRecord::Base
 					raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
 					bits = hash.invert
 
-					query = self
-
-					# Perform conditions
-					args.each do |slug|
-						query = query.where("POW(2, ?) & `#{self.table_name}`.`#{column}` > 0", bits[slug.to_s])
+					# Type of condition
+					if args.first.is_a?(String) && ['AND', 'OR'].include?(args.first.upcase)
+						delimiter = args.shift
+					else
+						delimiter = 'AND'
 					end
 
-					# Return results
+					# Empty conditions
+					conditions = Array.new
+
+					# Build conditions
+					if args.first.is_a?(Hash)
+						args.first.each do |slug,tf|
+							bit = bits[slug.to_s]
+							conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
+						end
+					else
+						args.each do |slug|
+							bit = bits[slug.to_s]
+							conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}` > 0"
+						end
+					end
+
+					# Run add query
+					return self.where(conditions.join(" #{delimiter} ")) unless conditions.empty?
+
+					# Return update query
 					return query
 				end
 				
