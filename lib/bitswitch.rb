@@ -100,8 +100,93 @@ class BitSwitch
 	end
 end
 
+# Convert Fixnum to Switch
 class Fixnum
 	def to_switch(labels = {})
 		BitSwitch.new(self, labels)
 	end
+end
+
+# Convert hash of booleans to Switch
+class Hash
+	def to_switch
+		cleaned = self.delete_if{|k,v| ![true, false].include?(v)}
+		return BitSwitch.new if cleaned.empty?
+		return BitSwitch.new(cleaned)
+	end
+end
+
+# Rails 3 Extension
+module KellyLSB
+	module BitSwitch
+		extend ActiveSupport::Concern
+
+		module ClassMethods
+			def bitswitch(column, hash = {})
+
+				KellyLSB::BitSwitch::LocalInstanceMethods.define_method(column.to_sym) do |*args|
+					val = read_attribute(column)
+
+					# Make sure the value is an integer
+					raise KellyLSB::BitSwitch::Error "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+
+					# Get the BitSwitch
+					val = val.to_switch hash
+
+					# Return the value of a specific key
+					return val[args.first] unless args[0].nil?
+
+					# Return the switch
+					return val
+				end
+
+				columne = column.to_s + '='
+				KellyLSB::BitSwitch::LocalInstanceMethods.define_method(columne.to_sym) do |*args|
+					val = read_attribute(column)
+
+					# Make sure the value is an integer
+					raise KellyLSB::BitSwitch::Error "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+
+					# Get the BitSwitch
+					val = val.to_switch hash
+
+					# Handle the passing of a hash
+					return val.to_hash.merge(args[0]).to_switch if args[0].is_a?(Hash)
+					# Return the switch
+					return val
+				end
+
+				KellyLSB::BitSwitch::SingletonMethods.define_method(column.to_sym) do |*args|
+					raise KellyLSB::BitSwitch::Error "Missing arguments!" if args.empty?
+					bits = hash.invert
+
+					# Query
+					query = self
+
+					# Perform conditions
+					args.each do |slug|
+						query.where("POW(2, ?) & `#{self.table_name}`.`#{column}` > 0", bits[slug])
+					end
+
+					# Return results
+					return query					
+				end
+				
+				include KellyLSB::BitSwitch::LocalInstanceMethods
+				extend KellyLSB::BitSwitch::SingletonMethods
+			end
+		end
+
+		# This module contains class methods
+		module SingletonMethods
+		end
+
+		module LocalInstanceMethods
+		end
+	end
+end
+
+puts "Active record is a class: #{ActiveRecord::Base.is_a?(Class)}"
+if ActiveRecord::Base.is_a?(Class)
+	ActiveRecord::Base.send(:include, KellyLSB::BitSwitch)
 end
