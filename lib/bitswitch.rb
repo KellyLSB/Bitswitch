@@ -150,8 +150,12 @@ module KellyLSB
 					# Get the BitSwitch
 					val = val.to_switch hash
 
-					# Handle the passing of a hash
-					return val.to_hash.merge(args[0]).to_switch if args[0].is_a?(Hash)
+					# Update with a hash
+					if args[0].is_a?(Hash)
+						val = val.to_hash.merge(args[0]).to_switch
+						update_attribute(column, val)
+					end
+					
 					# Return the switch
 					return val
 				end
