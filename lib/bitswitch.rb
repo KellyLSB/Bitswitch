@@ -124,7 +124,7 @@ module KellyLSB
 		module ClassMethods
 			def bitswitch(column, hash = {})
 
-				KellyLSB::BitSwitch::LocalInstanceMethods.define_method(column.to_sym) do |*args|
+				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, column.to_sym) do |*args|
 					val = read_attribute(column)
 
 					# Make sure the value is an integer
@@ -141,7 +141,7 @@ module KellyLSB
 				end
 
 				columne = column.to_s + '='
-				KellyLSB::BitSwitch::LocalInstanceMethods.define_method(columne.to_sym) do |*args|
+				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, columne.to_sym) do |*args|
 					val = read_attribute(column)
 
 					# Make sure the value is an integer
@@ -156,7 +156,7 @@ module KellyLSB
 					return val
 				end
 
-				KellyLSB::BitSwitch::SingletonMethods.define_method(column.to_sym) do |*args|
+				KellyLSB::BitSwitch::SingletonMethods.send(:define_method, column.to_sym) do |*args|
 					raise KellyLSB::BitSwitch::Error "Missing arguments!" if args.empty?
 					bits = hash.invert
 
@@ -186,7 +186,6 @@ module KellyLSB
 	end
 end
 
-puts "Active record is a class: #{ActiveRecord::Base.is_a?(Class)}"
 if ActiveRecord::Base.is_a?(Class)
 	ActiveRecord::Base.send(:include, KellyLSB::BitSwitch)
 end
