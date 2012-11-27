@@ -8,11 +8,20 @@ class BitSwitch
 			@labels = {}
 			@val = 0
 
-			# Loop through the hash and set the switches
-			i=0; n.each do |label, tf|
-				self[i] = tf ? 1 : 0
-				@labels[i] = label
-				i += 1
+			if labels.empty?
+				# Loop through the hash and set the switches
+				i=0; n.each do |label, tf|
+					self[i] = tf ? 1 : 0
+					@labels[i] = label.to_s
+					i += 1
+				end
+			else
+				# Set the switches
+				@labels = labels
+
+				n.each do |label, tf|
+					self[label.to_s] = tf ? 1 : 0
+				end
 			end
 
 			# Return the BitSwitch object
@@ -29,6 +38,7 @@ class BitSwitch
 		val = val > 0
 
 		# If a string representation of a bit was provided get the numerical
+		bit.to_s if bit.is_a?(Symbol)
 		bit = @labels.invert[bit] if bit.is_a?(String)
 
 		# If nil return false
@@ -46,6 +56,7 @@ class BitSwitch
 	def [](bit)
 
 		# If a string representation of a bit was provided get the numerical
+		bit.to_s if bit.is_a?(Symbol)
 		bit = @labels.invert[bit] if bit.is_a?(String)
 
 		# If nil return false
@@ -109,15 +120,16 @@ end
 
 # Convert hash of booleans to Switch
 class Hash
-	def to_switch
+	def to_switch(labels = {})
 		cleaned = self.delete_if{|k,v| ![true, false].include?(v)}
-		return BitSwitch.new if cleaned.empty?
-		return BitSwitch.new(cleaned)
+		return BitSwitch.new(0, labels) if cleaned.empty?
+		return BitSwitch.new(cleaned, labels)
 	end
 end
 
 # Rails 3 Extension
-module KellyLSB
+if defined? ActiveRecord::Base
+	module KellyLSB
 	module BitSwitch
 		extend ActiveSupport::Concern
 
@@ -128,52 +140,48 @@ module KellyLSB
 					val = read_attribute(column)
 
 					# Make sure the value is an integer
-					raise KellyLSB::BitSwitch::Error "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+					raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
 
 					# Get the BitSwitch
 					val = val.to_switch hash
 
 					# Return the value of a specific key
-					return val[args.first] unless args[0].nil?
+					return val[args.first.to_s] unless args[0].nil?
 
 					# Return the switch
 					return val
 				end
 
 				columne = column.to_s + '='
-				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, columne.to_sym) do |*args|
+				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, columne.to_sym) do |input|
 					val = read_attribute(column)
 
 					# Make sure the value is an integer
-					raise KellyLSB::BitSwitch::Error "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+					raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
 
 					# Get the BitSwitch
-					val = val.to_switch hash
+					val = val.to_switch(hash).to_hash.merge(input).to_switch(hash)
 
-					# Update with a hash
-					if args[0].is_a?(Hash)
-						val = val.to_hash.merge(args[0]).to_switch
-						update_attribute(column, val)
-					end
-					
+					# Write the updated value
+					update_column(column, val.to_i)
+
 					# Return the switch
-					return val
+					return self.send(column)
 				end
 
 				KellyLSB::BitSwitch::SingletonMethods.send(:define_method, column.to_sym) do |*args|
-					raise KellyLSB::BitSwitch::Error "Missing arguments!" if args.empty?
+					raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
 					bits = hash.invert
 
-					# Query
 					query = self
 
 					# Perform conditions
 					args.each do |slug|
-						query.where("POW(2, ?) & `#{self.table_name}`.`#{column}` > 0", bits[slug])
+						query = query.where("POW(2, ?) & `#{self.table_name}`.`#{column}` > 0", bits[slug.to_s])
 					end
 
 					# Return results
-					return query					
+					return query
 				end
 				
 				include KellyLSB::BitSwitch::LocalInstanceMethods
@@ -187,9 +195,11 @@ module KellyLSB
 
 		module LocalInstanceMethods
 		end
-	end
-end
 
-if ActiveRecord::Base.is_a?(Class)
+		class Error < StandardError
+		end
+	end
+	end
+
 	ActiveRecord::Base.send(:include, KellyLSB::BitSwitch)
 end
