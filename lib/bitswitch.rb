@@ -179,6 +179,9 @@ if defined? ActiveRecord::Base
 					raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
 					bits = hash.invert
 
+					# Debug Purposes
+					puts bits.inspect + "\n"
+
 					# Type of condition
 					if args.first.is_a?(String) && ['AND', 'OR'].include?(args.first.upcase)
 						delimiter = args.shift
@@ -192,15 +195,16 @@ if defined? ActiveRecord::Base
 					# Build conditions
 					if args.first.is_a?(Hash)
 						args.first.each do |slug,tf|
-							bit = bits[slug.to_s]
-							conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
+							conditions << 'POW(2, ' + bits[slug.to_s] + ") & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
 						end
 					else
 						args.each do |slug|
-							bit = bits[slug.to_s]
-							conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}` > 0"
+							conditions << 'POW(2, ' + bits[slug.to_s] + ") & `#{self.table_name}`.`#{column}` > 0"
 						end
 					end
+
+					# Debug Purposes
+					puts conditions.inspect + "\n"
 
 					# Run add query
 					return self.where(conditions.join(" #{delimiter} ")) unless conditions.empty?
