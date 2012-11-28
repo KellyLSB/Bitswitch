@@ -135,97 +135,83 @@ if defined? ActiveRecord::Base
 
 		module ClassMethods
 			def bitswitch(column, hash = {})
-
-				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, column.to_sym) do |*args|
-					val = read_attribute(column)
-
-					# If nil make 0
-					val = 0 if val.nil?
-
-					# Make sure the value is an integer
-					raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
-
-					# Get the BitSwitch
-					val = val.to_switch hash
-
-					# Return the value of a specific key
-					return val[args.first.to_s] unless args[0].nil?
-
-					# Return the switch
-					return val
-				end
-
 				columne = column.to_s + '='
-				KellyLSB::BitSwitch::LocalInstanceMethods.send(:define_method, columne.to_sym) do |input|
-					val = read_attribute(column)
+				send(:include, Module.new {
+					send(:define_method, column.to_sym) do |*args|
+						val = read_attribute(column)
 
-					# If nil make 0
-					val = 0 if val.nil?
+						# If nil make 0
+						val = 0 if val.nil?
 
-					# Make sure the value is an integer
-					raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+						# Make sure the value is an integer
+						raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
 
-					# Get the BitSwitch
-					val = val.to_switch(hash).to_hash.merge(input).to_switch(hash)
+						# Get the BitSwitch
+						val = val.to_switch hash
 
-					# Write the updated value
-					update_column(column, val.to_i)
+						# Return the value of a specific key
+						return val[args.first.to_s] unless args[0].nil?
 
-					# Return the switch
-					return self.send(column)
-				end
-
-				KellyLSB::BitSwitch::SingletonMethods.send(:define_method, column.to_sym) do |*args|
-					raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
-					bits = hash.invert
-
-					# Debug Purposes
-					puts bits.inspect + "\n"
-
-					# Type of condition
-					if args.first.is_a?(String) && ['AND', 'OR'].include?(args.first.upcase)
-						delimiter = args.shift
-					else
-						delimiter = 'AND'
+						# Return the switch
+						return val
 					end
 
-					# Empty conditions
-					conditions = Array.new
+					send(:define_method, columne.to_sym) do |input|
+						val = read_attribute(column)
 
-					# Build conditions
-					if args.first.is_a?(Hash)
-						args.first.each do |slug,tf|
-							conditions << 'POW(2, ' + bits[slug.to_s] + ") & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
-						end
-					else
-						args.each do |slug|
-							conditions << 'POW(2, ' + bits[slug.to_s] + ") & `#{self.table_name}`.`#{column}` > 0"
-						end
+						# If nil make 0
+						val = 0 if val.nil?
+
+						# Make sure the value is an integer
+						raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+
+						# Get the BitSwitch
+						val = val.to_switch(hash).to_hash.merge(input).to_switch(hash)
+
+						# Write the updated value
+						update_column(column, val.to_i)
+
+						# Return the switch
+						return self.send(column)
 					end
+				})
 
-					# Debug Purposes
-					puts conditions.inspect + "\n"
+				send(:extend, Module.new {
+					send(:define_method, column.to_sym) do |*args|
+						raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
+						bits = hash.invert
 
-					# Run add query
-					return self.where(conditions.join(" #{delimiter} ")) unless conditions.empty?
+						# Type of condition
+						if args.first.is_a?(String) && ['AND', 'OR'].include?(args.first.upcase)
+							delimiter = args.shift
+						else
+							delimiter = 'AND'
+						end
 
-					# Return update query
-					return query
-				end
-				
-				include KellyLSB::BitSwitch::LocalInstanceMethods
-				extend KellyLSB::BitSwitch::SingletonMethods
+						# Empty conditions
+						conditions = Array.new
+
+						# Build conditions
+						if args.first.is_a?(Hash)
+							args.first.each do |slug,tf|
+								bit = bits[slug.to_s]
+								conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
+							end
+						else
+							args.each do |slug|
+								bit = bits[slug.to_s]
+								conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}` > 0"
+							end
+						end
+
+						# Run add query
+						return self.where(conditions.join(" #{delimiter} ")) unless conditions.empty?
+
+						# Return update query
+						return query
+					end
+				})
 			end
-		end
-
-		# This module contains class methods
-		module SingletonMethods
-		end
-
-		module LocalInstanceMethods
-		end
-
-		class Error < StandardError
 		end
 	end
 	end
