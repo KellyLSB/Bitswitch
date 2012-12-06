@@ -168,6 +168,9 @@ if defined? ActiveRecord::Base
 						# Get the BitSwitch
 						val = val.to_switch(hash).to_hash.merge(input).to_switch(hash)
 
+						# Dont save if it cant save
+						return false if read_attribute(:id).nil?
+
 						# Write the updated value
 						update_column(column, val.to_i)
 
