@@ -35,7 +35,8 @@ class BitSwitch
 
 	# Set a bit
 	def []=(bit, val)
-		val = val > 0
+		val = val == true if val.is_a?(TrueClass)
+		val = val > 0 if val.is_a?(Fixnum)
 
 		# If a string representation of a bit was provided get the numerical
 		bit.to_s if bit.is_a?(Symbol)
