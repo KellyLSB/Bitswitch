@@ -39,7 +39,7 @@ class BitSwitch
 		val = val > 0 if val.is_a?(Fixnum)
 
 		# If a string representation of a bit was provided get the numerical
-		bit.to_s if bit.is_a?(Symbol)
+		bit = bit.to_s if bit.is_a?(Symbol)
 		bit = @labels.invert[bit] if bit.is_a?(String)
 
 		# If nil return false
@@ -57,7 +57,7 @@ class BitSwitch
 	def [](bit)
 
 		# If a string representation of a bit was provided get the numerical
-		bit.to_s if bit.is_a?(Symbol)
+		bit = bit.to_s if bit.is_a?(Symbol)
 		bit = @labels.invert[bit] if bit.is_a?(String)
 
 		# If nil return false
@@ -109,6 +109,16 @@ class BitSwitch
 
 		# Return the serialized BitSwitch
 		serialized
+	end
+
+	# Method missing for args access
+	def method_missing(method, *args)
+		if method[-1] == '='
+			method = method[0..-2]
+			return self[method] = args.first
+		end
+		
+		self[method]
 	end
 end
 
