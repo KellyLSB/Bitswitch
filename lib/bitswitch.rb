@@ -167,17 +167,38 @@ if defined? ActiveRecord::Base
 						return val
 					end
 
-					send(:define_method, columne.to_sym) do |input|
+					send(:define_method, columne.to_sym) do |*args|
 						val = read_attribute(column)
 
 						# If nil make 0
 						val = 0 if val.nil?
 
+						# Get the input hash
+						input = args[0]
+
 						# Make sure the value is an integer
 						raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
 
-						# Get the BitSwitch
-						val = val.to_switch(hash).to_hash.merge(input).to_switch(hash)
+						# Make sure the first input is a hash
+						raise KellyLSB::BitSwitch::Error, "Input: We are expecting at least one argument that is a Hash" unless input.is_a?(Hash)
+
+						# Get the BitSwitch as a Hash
+						val = val.to_switch(hash).to_hash
+
+						# If a second argument was passed and was true set all other keys to false
+						if args[1] == true
+
+							# Get list of unset keys
+							remove = val.keys.collect(&:to_s) - input.keys.collect(&:to_s)
+
+							# Set those keys to false
+							for key in remove
+								input[remove] = false
+							end 
+						end
+
+						# Merge in the changes
+						val.merge(input).to_switch(hash)
 
 						# Dont save if it cant save
 						return false if read_attribute(:id).nil?
