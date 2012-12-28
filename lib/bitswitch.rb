@@ -142,6 +142,9 @@ end
 if defined? ActiveRecord::Base
 	module KellyLSB
 	module BitSwitch
+		class Error < StandardError
+		end
+
 		extend ActiveSupport::Concern
 
 		module ClassMethods
