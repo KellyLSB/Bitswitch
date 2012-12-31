@@ -132,7 +132,15 @@ end
 # Convert hash of booleans to Switch
 class Hash
 	def to_switch(labels = {})
-		cleaned = self.delete_if{|k,v| ![true, false].include?(v)}
+
+		# Remove any non boolean values
+		cleaned = self.delete_if{|k,v| ![true, false, 1, 0, '1', '0'].include?(v)}
+
+		# Convert Numerical Booleans
+		cleaned.collect!{|k,v|(v.is_a?(String) ? v.to_i : v)}
+		cleaned.collect!{|k,v|(v.is_a?(Fixnum) ? !v.zero? : v)}
+
+		# Return new BitSwitch
 		return BitSwitch.new(0, labels) if cleaned.empty?
 		return BitSwitch.new(cleaned, labels)
 	end
@@ -202,14 +210,14 @@ if defined? ActiveRecord::Base
 
 							# Set those keys to false
 							for key in remove
-								input[remove] = false
+								input[key] = false
 							end 
 						end
 
 						# Merge in the changes
-						val.merge(input).to_switch(hash)
+						val = val.merge(input).to_switch(hash)
 
-						# Dont save if it cant save
+						# Dont save if this is a new model
 						return false if read_attribute(:id).nil?
 
 						# Write the updated value
