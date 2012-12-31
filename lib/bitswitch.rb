@@ -170,14 +170,20 @@ if defined? ActiveRecord::Base
 						return val
 					end
 
-					send(:define_method, columne.to_sym) do |*args|
+					send(:define_method, columne.to_sym) do |args|
 						val = read_attribute(column)
 
 						# If nil make 0
 						val = 0 if val.nil?
 
-						# Get the input hash
-						input = args[0]
+						# Get the input data
+						if args.is_a?(Array)
+							input = args[0]
+							truncate = args[1]
+						else
+							input = args
+							truncate = false
+						end
 
 						# Make sure the value is an integer
 						raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
@@ -189,7 +195,7 @@ if defined? ActiveRecord::Base
 						val = val.to_switch(hash).to_hash
 
 						# If a second argument was passed and was true set all other keys to false
-						if args[1] == true
+						if truncate == true
 
 							# Get list of unset keys
 							remove = val.keys.collect(&:to_s) - input.keys.collect(&:to_s)
