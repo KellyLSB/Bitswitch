@@ -1,9 +1,15 @@
+require 'bitswitch/version'
+
 class BitSwitch
 
 	def initialize(input = 0, labels = {})
 
+		# Placeholder
+		@labels = {}
+		@val = 0
+
 		# Validate the value input
-		unless n.is_a?(Fixnum) || n.is_a?(Hash)
+		unless input.is_a?(Fixnum) || input.is_a?(Hash)
 			raise KellyLSB::BitSwitch::Error,
 				"BitSwitch: BitSwitch can only accept an instance of `Fixnum` or `Hash` as the first argument"
 		end
@@ -15,8 +21,8 @@ class BitSwitch
 		end
 
 		# Validate hash value input
-		if n.is_a(Hash)
-			n.each do |label, value|
+		if input.is_a?(Hash)
+			input.each do |label, value|
 
 				# Require a String, Symbol or Fixnum value for input hash keys
 				unless label.is_a?(String) || label.is_a?(Symbol) || label.is_a?(Fixnum)
