@@ -1,103 +1,170 @@
 class BitSwitch
 
-	def initialize(n = 0, labels = {})
+	def initialize(input = 0, labels = {})
 
-		if n.is_a?(Hash)
-
-			# Set default values
-			@labels = {}
-			@val = 0
-
-			if labels.empty?
-				# Loop through the hash and set the switches
-				i=0; n.each do |label, tf|
-					self[i] = tf ? 1 : 0
-					@labels[i] = label.to_s
-					i += 1
-				end
-			else
-				# Set the switches
-				@labels = labels
-
-				n.each do |label, tf|
-					self[label.to_s] = tf ? 1 : 0
-				end
-			end
-
-			# Return the BitSwitch object
-			return self
+		# Validate the value input
+		unless n.is_a?(Fixnum) || n.is_a?(Hash)
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch: BitSwitch can only accept an instance of `Fixnum` or `Hash` as the first argument"
 		end
 
-		# Set labels and initial number
-		@labels = labels
-		@val = n
+		# Validate the labels input
+		unless labels.is_a?(Hash)
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch: BitSwitch expected the second argument to be a `Hash`"
+		end
+
+		# Validate hash value input
+		if n.is_a(Hash)
+			n.each do |label, value|
+
+				# Require a String, Symbol or Fixnum value for input hash keys
+				unless label.is_a?(String) || label.is_a?(Symbol) || label.is_a?(Fixnum)
+					raise KellyLSB::BitSwitch::Error,
+						"BitSwitch: Input Hash keys must be a String, Symbol or Fixnum representation of the bit."
+				end
+
+				# Require input hash values to be true or false
+				unless value === true || value === false
+					raise KellyLSB::BitSwitch::Error,
+						"BitSwitch: Input Hash values must be either true or false."
+				end
+			end
+		end
+
+		# Validate label hash format
+		labels.each do |bit, label|
+
+			# Require label bits to be Fixnum
+			unless bit.is_a?(Fixnum)
+				raise KellyLSB::BitSwitch::Error,
+					"BitSwitch: Label Hash keys must be instances of Fixnum"
+			end
+
+			# Require labels to be Strings or Symbols
+			unless label.is_a?(String) || label.is_a?(Symbol)
+				raise KellyLSB::BitSwitch::Error,
+					"BitSwitch: Label Hash values must be either Symbols or Strings"
+			end
+		end
+
+		# Apply label hash into the instance variable and assume 0
+		@labels = labels.inject({}){|h, (k, v)|h.merge(k => v.to_sym)}
+		@val = input.is_a?(Hash) ? 0 : input
+
+		# Handle hash input
+		if input.is_a?(Hash)
+
+			# If no labels are set
+			# Loop through the input and set the values
+			input.each_with_index { |(label, value), index|
+				@labels[index] = label.to_sym
+				self[index] = value
+			} if @labels.empty?
+
+			# Otherwise just set
+			input.each { |label, value|
+				self[label] = value
+			} unless @labels.empty?
+		end
 	end
 
-	# Set a bit
+	# Set a bit (or label)
 	def []=(bit, val)
-		val = val == true if val.is_a?(TrueClass)
+
+		# Validate input label / bit
+		unless bit.is_a?(Symbol) || bit.is_a?(String) || bit.is_a?(Fixnum)
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): Expected the key to be a Symbol, String or Fixnum"
+		end
+
+		# Validate input value
+		unless val === true || val === false || val.is_a?(Fixnum)
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): Expected the value to be true, false or Fixnum"
+		end
+
+		# Convert numerical to boolean
 		val = val > 0 if val.is_a?(Fixnum)
 
-		# If a string representation of a bit was provided get the numerical
-		bit = bit.to_s if bit.is_a?(Symbol)
-		bit = @labels.invert[bit] if bit.is_a?(String)
+		# Get the numerical representation of the label
+		bit = @labels.invert[bit.to_sym] unless bit.is_a?(Fixnum)
 
 		# If nil return false
-		return false if bit.nil?
-	
+		if bit.nil?
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): There was no bit to match the requested label."
+		end
+
 		# Set/Unset the bits
 		@val |= 2 ** bit if val
 		@val &= ~(2 ** bit) if !val && self[bit]
 
 		# Return self
-		return self
+		self
 	end
-	
+
 	# Check a bit status
 	def [](bit)
 
-		# If a string representation of a bit was provided get the numerical
-		bit = bit.to_s if bit.is_a?(Symbol)
-		bit = @labels.invert[bit] if bit.is_a?(String)
+		# Validate input label / bit
+		unless bit.is_a?(Symbol) || bit.is_a?(String) || bit.is_a?(Fixnum)
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): Expected the key to be a Symbol, String or Fixnum"
+		end
+
+		# Get the numerical representation of the label
+		bit = @labels.invert[bit.to_sym] unless bit.is_a?(Fixnum)
 
 		# If nil return false
-		return false if bit.nil?
+		if bit.nil?
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): There was no bit to match the requested label."
+		end
 
-		# Check if the bit it set
+		# Check if the bit was set
 		(2 ** bit) & @val > 0
 	end
-	
+
 	# Set an integer
-	def set=(n)
-		return false unless n.is_a?(Fixnum)
-		@val = n
+	def set=(input)
+
+		# Validate input
+		unless input.is_a?(Fixnum)
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): Expected value to be a Fixnum"
+		end
+
+		# Set the value
+		@val = input
+
+		# Return self
+		self
 	end
 
 	def labels(hash = {}, reset = false)
 
-		# If reset is false then merge the labels
-		unless reset
-			@labels.merge!(hash)
-			return self
-		end
-
-		# Set a whole new label hash
-		@labels = hash
+		# Either merge or overwrite labels
+		@labels.merge!(hash) unless reset
+		@labels = hash if reset
 
 		# Return self
-		return self
+		self
 	end
-	
-	# Convert to integer
+
+	# Get value
 	def to_i
 		@val
 	end
 
-	# Convert to hash
+	# Get hash
 	def to_hash
 
-		# Raise an error if no labels are set
-		raise StandardError, "No labels were set!" if @labels.empty?
+		# Make sure labels are set
+		if @labels.empty?
+			raise KellyLSB::BitSwitch::Error,
+				"BitSwitch (#{__method__}): No labels were set!"
+		end
 
 		# Prepare new hash
 		serialized = Hash.new
@@ -107,17 +174,20 @@ class BitSwitch
 			serialized[label] = self[bit]
 		end
 
-		# Return the serialized BitSwitch
+		# Return serialization
 		serialized
 	end
 
-	# Method missing for args access
+	# Method access
 	def method_missing(method, *args)
+
+		# Handle setting values
 		if method[-1] == '='
 			method = method[0..-2]
 			return self[method] = args.first
 		end
-		
+
+		# Return a value
 		self[method]
 	end
 end
@@ -150,16 +220,13 @@ end
 if defined? ActiveRecord::Base
 	module KellyLSB
 	module BitSwitch
-		class Error < StandardError
-		end
-
 		extend ActiveSupport::Concern
 
 		module ClassMethods
 			def bitswitch(column, hash = {})
 				columne = column.to_s + '='
 				send(:include, Module.new {
-					send(:define_method, column.to_sym) do |*args|
+					send(:define_method, column) do |*args|
 						val = read_attribute(column)
 
 						# If nil make 0
@@ -178,7 +245,7 @@ if defined? ActiveRecord::Base
 						return val
 					end
 
-					send(:define_method, columne.to_sym) do |args|
+					send(:define_method, columne) do |args|
 						val = read_attribute(column)
 
 						# If nil make 0
@@ -211,7 +278,7 @@ if defined? ActiveRecord::Base
 							# Set those keys to false
 							for key in remove
 								input[key] = false
-							end 
+							end
 						end
 
 						# Merge in the changes
@@ -229,7 +296,7 @@ if defined? ActiveRecord::Base
 				})
 
 				send(:extend, Module.new {
-					send(:define_method, column.to_sym) do |*args|
+					send(:define_method, column) do |*args|
 						raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
 						bits = hash.invert
 

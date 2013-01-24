@@ -5,7 +5,7 @@ require 'bitswitch/version'
 
 Gem::Specification.new do |gem|
   gem.name          = "bitswitch"
-  gem.version       = Bitswitch::VERSION
+  gem.version       = KellyLSB::BitSwitch::VERSION
   gem.authors       = ["Kelly Becker"]
   gem.email         = ["kellylsbkr@gmail.com"]
   gem.description   = "Have you ever wanted to store multiple true/false values in your database, but annoyed with how many fields your tables have, then BitSwitcher is good for you. By assigning a bit for each true/false you can store all your fields in one integer."
