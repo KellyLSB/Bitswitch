@@ -229,28 +229,40 @@ if defined? ActiveRecord::Base
 		extend ActiveSupport::Concern
 
 		module ClassMethods
+
+			# Generate switch methods
 			def bitswitch(column, hash = {})
+
+				# Set column method name
 				columne = column.to_s + '='
+
+				# Instance methods
 				send(:include, Module.new {
+
+					# BitSwitch access method
 					send(:define_method, column) do |*args|
 						val = read_attribute(column)
 
 						# If nil make 0
 						val = 0 if val.nil?
 
-						# Make sure the value is an integer
-						raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+						# Make sure the column value is a Fixnum
+						unless val.is_a?(Fixnum)
+							raise KellyLSB::BitSwitch::Error,
+								"Column: #{column} is not an integer!"
+						end
 
-						# Get the BitSwitch
+						# Convert the Fixnum to a BitSwitch
 						val = val.to_switch hash
 
-						# Return the value of a specific key
-						return val[args.first.to_s] unless args[0].nil?
+						# Return the value of a specific key if requested
+						return val[args.first] unless args[0].nil?
 
 						# Return the switch
-						return val
+						val
 					end
 
+					# BitSwitch set method
 					send(:define_method, columne) do |args|
 						val = read_attribute(column)
 
@@ -267,31 +279,43 @@ if defined? ActiveRecord::Base
 						end
 
 						# Make sure the value is an integer
-						raise KellyLSB::BitSwitch::Error, "Column: #{column} is not an integer!" unless val.is_a?(Fixnum)
+						unless val.is_a?(Fixnum)
+							raise KellyLSB::BitSwitch::Error,
+								"Column: #{column} is not an integer!"
+						end
 
 						# Make sure the first input is a hash
-						raise KellyLSB::BitSwitch::Error, "Input: We are expecting at least one argument that is a Hash" unless input.is_a?(Hash)
+						unless input.is_a?(Hash)
+							raise KellyLSB::BitSwitch::Error,
+								"Input: We are expecting at least one argument that is a Hash"
+						end
 
-						# Get the BitSwitch as a Hash
+						# Convert Fixnum -> BitSwitch -> Hash
 						val = val.to_switch(hash).to_hash
 
-						# If a second argument was passed and was true set all other keys to false
-						if truncate == true
-
-							# Get list of unset keys
-							remove = val.keys.collect(&:to_s) - input.keys.collect(&:to_s)
-
-							# Set those keys to false
-							for key in remove
-								input[key] = false
+						# Convert all keys to symbols
+						input.delete_if do |key, val|
+							if key.is_a?(String)
+								input[key.to_sym] = val
+								true
+							else
+								false
 							end
 						end
 
-						# Merge in the changes
+						# If we are requested to truncate other keys
+						if truncate == true
+
+							# Get list of unset keys and set them to false
+							remove = val.keys.collect(&:to_sym) - input.keys.collect(&:to_sym)
+							remove.each { |key| input[key] = false }
+						end
+
+						# Merge in the changes then convert to BitSwitch
 						val = val.merge(input).to_switch(hash)
 
 						# Dont save if this is a new model
-						return false if read_attribute(:id).nil?
+						return false if new_record?
 
 						# Write the updated value
 						update_column(column, val.to_i)
@@ -301,13 +325,21 @@ if defined? ActiveRecord::Base
 					end
 				})
 
+				# Scoping methods
 				send(:extend, Module.new {
 					send(:define_method, column) do |*args|
-						raise KellyLSB::BitSwitch::Error, "Missing arguments!" if args.empty?
+
+						# Require at least one argument
+						if args.empty?
+							raise KellyLSB::BitSwitch::Error,
+								"Missing arguments! We were expecing at least one label or bit to query by."
+						end
+
+						# Invert the label hash
 						bits = hash.invert
 
 						# Type of condition
-						if args.first.is_a?(String) && ['AND', 'OR'].include?(args.first.upcase)
+						if args.first.is_a?(String) && ['AND', 'OR'].include?(args.first.to_s.upcase)
 							delimiter = args.shift
 						else
 							delimiter = 'AND'
@@ -318,7 +350,7 @@ if defined? ActiveRecord::Base
 
 						# Build conditions
 						if args.first.is_a?(Hash)
-							args.first.each do |slug,tf|
+							args.first.each do |slug, tf|
 								bit = bits[slug.to_s]
 								conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
 							end
@@ -329,11 +361,11 @@ if defined? ActiveRecord::Base
 							end
 						end
 
-						# Run add query
+						# If we have query conditions go ahead and return the updated scope
 						return self.where(conditions.join(" #{delimiter} ")) unless conditions.empty?
 
-						# Return update query
-						return query
+						# Return self
+						self
 					end
 				})
 			end
