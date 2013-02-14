@@ -352,12 +352,12 @@ if defined? ActiveRecord::Base
             if args.first.is_a?(Hash)
               args.first.each do |slug, tf|
                 bit = bits[slug.to_s]
-                conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}`" + (tf ? ' > 0' : ' <= 0')
+                conditions << "POW(2, #{bit}) & #{self.table_name}.#{column}" + (tf ? ' > 0' : ' <= 0')
               end
             else
               args.each do |slug|
                 bit = bits[slug.to_s]
-                conditions << "POW(2, #{bit}) & `#{self.table_name}`.`#{column}` > 0"
+                conditions << "POW(2, #{bit}) & #{self.table_name}.#{column} > 0"
               end
             end
 
