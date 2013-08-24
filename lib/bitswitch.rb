@@ -213,8 +213,11 @@ class Hash
     cleaned = self.delete_if{|k,v| ![true, false, 1, 0, '1', '0'].include?(v)}
 
     # Convert Numerical Booleans
-    cleaned.collect!{|k,v|(v.is_a?(String) ? v.to_i : v)}
-    cleaned.collect!{|k,v|(v.is_a?(Fixnum) ? !v.zero? : v)}
+    cleaned = cleaned.inject({}) do |o,(k,v)|
+      o[k] = v.is_a?(String) ? v.to_i : v
+      o[k] = v.is_a?(Fixnum) ? !v.zero? : v
+      o
+    end
 
     # Return new BitSwitch
     return BitSwitch.new(0, labels) if cleaned.empty?
