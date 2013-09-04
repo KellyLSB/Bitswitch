@@ -6,6 +6,6 @@ module KellyLSB
     end
 
     # Version of the gem
-      VERSION = "1.1.2"
+      VERSION = "1.1.3"
     end
 end

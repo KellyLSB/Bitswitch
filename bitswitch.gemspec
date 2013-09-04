@@ -11,6 +11,7 @@ Gem::Specification.new do |gem|
   gem.description   = "Have you ever wanted to store multiple true/false values in your database, but annoyed with how many fields your tables have, then BitSwitcher is good for you. By assigning a bit for each true/false you can store all your fields in one integer."
   gem.summary       = "Bitswitch lets you store multiple true/false values in an integer using boolean math."
   gem.homepage      = "http://kellybecker.me"
+  gem.license       = "MIT"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }
