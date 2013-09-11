@@ -370,6 +370,10 @@ if defined? ActiveRecord::Base
             # Return self
             self
           end
+
+          send(:define_method, "#{column}_labels") do |*args|
+            hash.values
+          end
         })
       end
     end
